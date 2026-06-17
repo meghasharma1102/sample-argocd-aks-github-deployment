@@ -1,0 +1,10 @@
+{
+  "name": "sample-node-app",
+  "version": "1.0.0",
+  "description": "Simple Node.js app for AKS and Helm practical.",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js"
+  },
+  "license": "MIT"
+}

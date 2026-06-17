@@ -1,0 +1,24 @@
+apiVersion: argoproj.io/v1alpha1  # only application syncing to Argo CD will support this API version
+kind: Application
+metadata:
+  name: sample-node-platform
+  namespace: argocd
+  # finalizers:
+  #   - resources-finalizer.argocd.argoproj.io # in argocd create the apllication with this finalizer to ensure that the resources are deleted when the application is deleted
+spec:
+  project: default
+  source:
+    # Replace with your GitHub repo URL before applying this manifest.
+    repoURL: https://github.com/<your-org-or-user>/sample-argocd-aks-github-deployment.git
+    targetRevision: main
+    path: argocd
+    directory:
+      recurse: false
+      include: "{platform-project.yaml,ingress-nginx-application.yaml,sample-node-app-application.yaml}"
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: argocd
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true

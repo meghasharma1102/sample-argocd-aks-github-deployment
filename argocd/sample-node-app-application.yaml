@@ -1,0 +1,35 @@
+apiVersion: argoproj.io/v1alpha1 # only application syncing to Argo CD will support this API version
+kind: Application
+metadata:
+  name: sample-node-app
+  namespace: argocd
+  annotations:
+    argocd.argoproj.io/sync-wave: "0"
+  finalizers:
+    - resources-finalizer.argocd.argoproj.io
+spec:
+  project: sample-node-platform
+  sources:
+    - # Replace with your GitHub repo URL before applying this manifest.
+      repoURL: https://github.com/<your-org-or-user>/sample-argocd-aks-github-deployment.git
+      targetRevision: main
+      path: helm/sample-node-app
+      helm:
+        releaseName: sample-node-app
+        valueFiles:
+          - $values/argocd/values-argocd.yaml
+    - repoURL: https://github.com/<your-org-or-user>/sample-argocd-aks-github-deployment.git
+      targetRevision: main
+      ref: values
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: demo-argocd
+  info:
+    - name: depends-on
+      value: ingress-nginx controller must be available before the app ingress is used.
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+    syncOptions:
+      - CreateNamespace=true

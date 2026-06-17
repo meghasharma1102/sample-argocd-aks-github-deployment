@@ -1,0 +1,49 @@
+replicaCount: 2
+
+image:
+  repository: acrprivatedemo01.azurecr.io/sample-node-app-argocd
+  tag: latest
+  pullPolicy: IfNotPresent
+
+service:
+  type: ClusterIP
+  port: 80
+  targetPort: 3000
+  annotations: {}
+
+resources:
+  requests:
+    cpu: 100m
+    memory: 128Mi
+  limits:
+    cpu: 300m
+    memory: 256Mi
+
+config:
+  APP_NAME: "Sample Node App - Argo CD"
+  APP_MESSAGE: "Application deployed to private AKS using Argo CD GitOps from GitHub."
+  STORAGE_PATH: "/app/data"
+
+podSecurityContext:
+  fsGroup: 2000
+  fsGroupChangePolicy: OnRootMismatch
+
+hpa:
+  enabled: true
+  minReplicas: 2
+  maxReplicas: 5
+  targetCPUUtilizationPercentage: 70
+
+persistence:
+  enabled: true
+  accessMode: ReadWriteOnce
+  size: 1Gi
+  storageClass: managed-csi
+
+ingress:
+  enabled: true
+  className: nginx
+  host: ""
+  path: /
+  pathType: Prefix
+  annotations: {}
