@@ -1,10 +1,12 @@
 # sample-argocd-aks-github-deployment
 
-This repo shows a simple GitOps deployment flow for an app running on AKS with Argo CD.
+This repo shows a simple GitOps flow for a sample app on AKS with Argo CD.
 
-The idea is:
+## Deployment Flow
 
-1. You change the app code in GitHub.
-2. GitHub Actions builds a Docker image and pushes it to ACR.
-3. The same workflow updates the image tag in `argocd/values-argocd.yaml`.
-4. Argo CD sees that Git change and deploys the new version to AKS.
+1. You change code in `app/`.
+2. GitHub Actions runs on the self-hosted Windows runner.
+3. The workflow signs in to Azure with OIDC.
+4. The workflow runs `az acr build` to build the image in ACR.
+5. The workflow updates `argocd/values-argocd.yaml` with the new image tag.
+6. Argo CD sees the Git change and syncs the app to AKS.

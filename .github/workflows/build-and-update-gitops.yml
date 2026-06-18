@@ -4,8 +4,6 @@ on:
   push:
     branches:
       - main
-    # Only rebuild the image when app source changes.
-    # Argo CD YAML or Helm-only changes can be synced directly by Argo CD from Git.
     paths:
       - app/**
       - .github/workflows/build-and-update-gitops.yml
@@ -13,82 +11,62 @@ on:
 
 permissions:
   contents: write
+  id-token: write
 
 env:
   ACR_NAME: acrprivatedemo01
   IMAGE_REPOSITORY: sample-node-app-argocd
-  DOCKERFILE_PATH: app/Dockerfile
-  BUILD_CONTEXT: app
-  # GitOps values file updated after a successful image push.
+  IMAGE_TAG: ${{ github.run_number }}
   VALUES_FILE: argocd/values-argocd.yaml
 
-jobs:
-  build-and-push:
-    name: 01 Build and Push Image
-    runs-on: ubuntu-latest
-    outputs:
-      image_tag: ${{ steps.meta.outputs.image_tag }}
-    steps:
-      - name: Checkout source code
-        uses: actions/checkout@v4
+defaults:
+  run:
+    shell: pwsh
 
-      - name: Generate image tag
-        id: meta
-        run: echo "image_tag=${GITHUB_RUN_NUMBER}" >> "$GITHUB_OUTPUT"
+jobs:
+  build-and-update:
+    runs-on: [self-hosted, Windows, X64]
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          persist-credentials: true
 
       - name: Sign in to Azure
         uses: azure/login@v2
         with:
-          creds: ${{ secrets.AZURE_CREDENTIALS }}
+          client-id: ${{ secrets.AZURE_CLIENT_ID }}
+          tenant-id: ${{ secrets.AZURE_TENANT_ID }}
+          subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
 
-      - name: Log in to Azure Container Registry
-        run: az acr login --name "$ACR_NAME"
-
-      - name: Build Docker image
-        env:
-          IMAGE_TAG: ${{ steps.meta.outputs.image_tag }}
+      - name: Build image in ACR
+        working-directory: app
         run: |
-          set -euo pipefail
-          docker build \
-            -t "$ACR_NAME.azurecr.io/$IMAGE_REPOSITORY:$IMAGE_TAG" \
-            -f "$DOCKERFILE_PATH" \
-            "$BUILD_CONTEXT"
-
-      - name: Push Docker image to ACR
-        env:
-          IMAGE_TAG: ${{ steps.meta.outputs.image_tag }}
-        run: |
-          set -euo pipefail
-          docker push "$ACR_NAME.azurecr.io/$IMAGE_REPOSITORY:$IMAGE_TAG"
-
-  update-gitops-values:
-    name: 02 Update GitOps Values for Argo CD
-    needs: build-and-push
-    runs-on: ubuntu-latest
-    steps:
-      - name: Checkout GitOps repository
-        uses: actions/checkout@v4
-        with:
-          fetch-depth: 0
+          az acr build `
+            --registry $env:ACR_NAME `
+            --image "$env:IMAGE_REPOSITORY:$env:IMAGE_TAG" `
+            --file Dockerfile `
+            .
 
       - name: Update image tag in Argo CD values
-        env:
-          IMAGE_TAG: ${{ needs.build-and-push.outputs.image_tag }}
         run: |
-          set -euo pipefail
-          sed -i "s|^  tag:.*|  tag: $IMAGE_TAG|" "$VALUES_FILE"
+          (Get-Content $env:VALUES_FILE) `
+            -replace '^\s*tag:.*$', "  tag: $env:IMAGE_TAG" `
+            | Set-Content $env:VALUES_FILE
 
-      - name: Commit and push Argo CD values change
-        env:
-          IMAGE_TAG: ${{ needs.build-and-push.outputs.image_tag }}
+      - name: Commit and push values file
         run: |
-          set -euo pipefail
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
           git config user.name "github-actions[bot]"
-          git add "$VALUES_FILE"
-          if git diff --cached --quiet; then
-            echo "No changes to commit"
+          git add $env:VALUES_FILE
+
+          git diff --cached --quiet
+          if ($LASTEXITCODE -eq 0) {
+            Write-Host "No changes to commit"
             exit 0
-          fi
-          git commit -m "Update Argo CD image tag to $IMAGE_TAG"
+          }
+
+          git commit -m "Update Argo CD image tag to $env:IMAGE_TAG"
           git push
