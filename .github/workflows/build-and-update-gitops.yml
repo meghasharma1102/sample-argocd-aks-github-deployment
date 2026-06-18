@@ -22,7 +22,7 @@ env:
 
 defaults:
   run:
-    shell: pwsh
+    shell: powershell
 
 jobs:
   build-and-update:
