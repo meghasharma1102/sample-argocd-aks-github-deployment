@@ -2,7 +2,7 @@ replicaCount: 2
 
 image:
   repository: acrprivatedemo01.azurecr.io/sample-node-app-argocd
-  tag: 19
+  tag: 20
   pullPolicy: IfNotPresent
 
 service:
