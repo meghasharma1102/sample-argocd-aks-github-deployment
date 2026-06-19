@@ -6,8 +6,7 @@ metadata:
 spec:
   description: Project for the sample node app and supporting ingress controller.
   sourceRepos:
-    # Replace with your GitHub repo URL before applying this project.
-    - https://github.com/<your-org-or-user>/sample-argocd-aks-github-deployment.git
+    - https://github.com/meghasharma1102/sample-argocd-aks-github-deployment.git
     - https://kubernetes.github.io/ingress-nginx
   destinations:
     - namespace: demo-argocd

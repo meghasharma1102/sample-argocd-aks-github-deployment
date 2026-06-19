@@ -8,8 +8,7 @@ metadata:
 spec:
   project: default
   source:
-    # Replace with your GitHub repo URL before applying this manifest.
-    repoURL: https://github.com/<your-org-or-user>/sample-argocd-aks-github-deployment.git
+    repoURL: https://github.com/meghasharma1102/sample-argocd-aks-github-deployment.git
     targetRevision: main
     path: argocd
     directory:
