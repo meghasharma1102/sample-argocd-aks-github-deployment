@@ -41,7 +41,7 @@ persistence:
   storageClass: managed-csi
 
 ingress:
-  enabled: true
+  enabled: false
   className: nginx
   host: "sample-node-app-argocd.internal"
   path: /
