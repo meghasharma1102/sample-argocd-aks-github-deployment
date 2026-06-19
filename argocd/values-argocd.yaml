@@ -1,8 +1,8 @@
-replicaCount: 2
+replicaCount: 1
 
 image:
   repository: acrprivatedemo01.azurecr.io/sample-node-app-argocd
-  tag: 20
+  tag: v1
   pullPolicy: IfNotPresent
 
 service:
@@ -29,13 +29,13 @@ podSecurityContext:
   fsGroupChangePolicy: OnRootMismatch
 
 hpa:
-  enabled: true
-  minReplicas: 2
-  maxReplicas: 5
+  enabled: false
+  minReplicas: 1
+  maxReplicas: 1
   targetCPUUtilizationPercentage: 70
 
 persistence:
-  enabled: true
+  enabled: false
   accessMode: ReadWriteOnce
   size: 1Gi
   storageClass: managed-csi
