@@ -2,7 +2,7 @@ replicaCount: 1
 
 image:
   repository: acrprivatedemo01.azurecr.io/21
-  tag: 21
+  tag: latest
   pullPolicy: IfNotPresent
 
 service:
